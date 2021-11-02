@@ -1,6 +1,8 @@
 # this file makes 'websites' a python package... meaning we can import it
 from datetime import datetime, timedelta
+import os
 from flask import Flask
+from flask_mail import Mail
 # from flask_sqlalchemy import SQLAlchemy
 from os import path
 import sys
@@ -17,6 +19,11 @@ def create_app():
     # encrypt session data
     app.config['SECRET_KEY'] = ']TZ6kf8E9VV{~jCeTu~.]nZytGamY'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DB_NAME
+    app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_TLS'] = True
+    app.config['MAIL_USERNAME'] = os.environ.get('EMAIL_USER')
+    app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASS')
     app.config.update(
         # SESSION_COOKIE_SECURE=True,
         # SESSION_COOKIE_HTTPONLY=True,
