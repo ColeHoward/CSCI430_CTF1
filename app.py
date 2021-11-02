@@ -38,9 +38,9 @@ def login_required(func):
     return wrapper
 
 
-@app.route('/login', methods=['GET'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'GET':
+    if request.method == 'POST':
         # session.pop('user_id', None)
         username = request.args.get('user')
         password = request.args.get('pass')
@@ -62,6 +62,7 @@ def login():
                 return resp
         else:
             flash("Incorrect username or password. Try again.", category="error")
+            return render_template('fail.html')
 
     return render_template('login.html')
 
