@@ -4,11 +4,13 @@ from website.models import User
 from werkzeug.security import generate_password_hash, check_password_hash
 from website.databases import db
 from flask import render_template, request, flash, jsonify, redirect, url_for, g, request, make_response
+from flask_mail import Mail, Message
 # from flask_login import login_required, current_user, fresh_login_required, logout_user
 import json
 from functools import wraps
 
 app = create_app()
+mail = Mail(app)
 app.secret_key = 'dxJO>BQ,7FXsw^s[t*8mC`<&]o|d@F'
 
 blacklist = []
@@ -176,15 +178,17 @@ def manage():
     #     g.user = user
 
     cookie = request.cookies.get('user_id')
-    print(str(cookie) + "B")
-
-    if not cookie or cookie == '':
+    user = User.query.filter_by(id=int(cookie)).first()
+    if not user.is_authenticated:
         return redirect(url_for('login'))
-    else:
-        print("A" + cookie + "A")
-        user = User.query.filter_by(id=int(cookie)).first()
-        resp = make_response(render_template('manage.html', user=user))
-        resp.set_cookie('user_id', value=str(user.id), max_age=1500, samesite='Lax')
+
+    # if not cookie or cookie == '':
+    #     return redirect(url_for('login'))
+    # else:
+    #     print("A" + cookie + "A")
+    #     user = User.query.filter_by(id=int(cookie)).first()
+    #     resp = make_response(render_template('manage.html', user=user))
+    #     resp.set_cookie('user_id', value=str(user.id), max_age=1500, samesite='Lax')
 
     if request.method == "GET" and cookie:
         action = request.args.get('action')
@@ -235,7 +239,7 @@ def manage():
 # @login_required
 def close_account():
     cookie = request.cookies.get('user_id')
-    user = User.query.filter_by(id=cookie).delete()
+    User.query.filter_by(id=cookie).delete()
     db.session.commit()
 
     resp = make_response(redirect(url_for('login')))
@@ -249,6 +253,6 @@ def close_account():
 
 # only if we execute this file, and did not import it, should the app be run
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
 
     #  ssl_context='adhoc'
