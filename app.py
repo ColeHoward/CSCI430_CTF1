@@ -54,7 +54,7 @@ def login():
                 # session.permanent = True
                 user.is_authenticated = True
                 db.session.commit()
-                resp = make_response(redirect(url_for('manage')))
+                resp = make_response(redirect(url_for('success')))
                 print('cookie id: ' + str(user.id))
                 resp.set_cookie('user_id', value=str(user.id), max_age=1500, samesite='Lax')
                 # may neede to set g.user = user here and then say user is authenticated
@@ -62,8 +62,9 @@ def login():
                 print(F'user_id: {str(user.id)}')
                 # login_user(user, remember=True)  # stays until webserver is restarted
                 return resp
-        else:
+        elif username is not None:
             flash("Incorrect username or password. Try again.", category="error")
+            return render_template('fail.html')
 
     return render_template('login.html')
 
@@ -131,6 +132,25 @@ def home():
     # we then need to register these blueprints in __init__.py
     # current_user allows us to reference the user that is logged in
 
+@app.route('/success', methods=['GET', 'POST'])
+# @login_required
+def success():
+    # if 'user_id' in session:
+    #     print('session active home create g.user')
+    #     user = User.query.filter_by(id=session['user_id']).first()
+    #     g.user = user
+    # if 'user_id' not in session:
+    #     print('has user id in home')
+    #     redirect(url_for('login'))
+    # print('no user id in home')
+    cookie = request.cookies.get('user_id')
+    if not cookie or cookie == '':
+        return redirect(url_for('login'))
+    resp = make_response(render_template('success.html'))
+    resp.set_cookie('user_id', value=cookie, max_age=1500, samesite='Lax')
+    return resp
+    # we then need to register these blueprints in __init__.py
+    # current_user allows us to reference the user that is logged in
 
 @app.route('/update-content', methods=['GET', 'POST'])
 # @login_required
