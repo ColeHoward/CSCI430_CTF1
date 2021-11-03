@@ -6,6 +6,7 @@ from flask_mail import Mail
 # from flask_sqlalchemy import SQLAlchemy
 from os import path
 from .databases import db
+# from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 DB_NAME = "database.db"
 
@@ -16,6 +17,7 @@ def create_app():
     # encrypt session data
     app.config['SECRET_KEY'] = ']TZ6kf8E9VV{~jCeTu~.]nZytGamY'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DB_NAME
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
     app.config['MAIL_PORT'] = 587
     app.config['MAIL_TLS'] = True
@@ -27,7 +29,10 @@ def create_app():
         # REMEMBER_COOKIE_DURATION=timedelta(minutes=25),
         # PERMANENT_SESSION_LIFETIME=timedelta(days=7),
     )
+
+    from website.models import User
     db.init_app(app)
+    print('here')
     create_database(app)
 
     # ensure user not logged in is directed to login page onload
@@ -44,6 +49,9 @@ def create_app():
 
 
 def create_database(app):
-    if not path.exists('website/' + DB_NAME):
-        db.create_all(app=app)
-        print('database created!')
+    print('here2')
+    # if not path.exists('website/' + DB_NAME):
+    db.create_all(app=app)
+    print('database created!')
+
+

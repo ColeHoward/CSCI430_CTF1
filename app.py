@@ -1,6 +1,7 @@
 from website import create_app
 import random
-from website.models import *
+from website.models import User
+from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from website.databases import db
 from flask import render_template, request, flash, jsonify, redirect, url_for, g, request, make_response
@@ -8,25 +9,11 @@ from flask_mail import Mail, Message
 # from flask_login import login_required, current_user, fresh_login_required, logout_user
 import json
 from functools import wraps
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 app = create_app()
 mail = Mail(app)
 app.secret_key = 'dxJO>BQ,7FXsw^s[t*8mC`<&]o|d@F'
-
-blacklist = []
-MAX_ATTEMPTS = 10
-
-
-# @app.before_request
-# def before_request():
-#     print('before_request')
-#     if 'user_id' in session:
-#         print('session active')
-#         user = User.query.filter_by(id=session['user_id']).first()
-#         g.user = user
-#     else:
-#         print('session inactive')
-#         redirect(url_for('login'))
 
 
 def login_required(func):
@@ -46,6 +33,8 @@ def login():
         # session.pop('user_id', None)
         username = request.args.get('user')
         password = request.args.get('pass')
+        if not username:
+            return render_template('login.html')
         user = User.query.filter_by(username=username).first()
         if user:
             if check_password_hash(user.password, password):
@@ -93,12 +82,12 @@ def logout():
 
 @app.route('/register', methods=['GET'])
 def signup():
-    # make sure to encrypt usernames
     if request.method == "GET":
         username = request.args.get('user')
         password = request.args.get('pass')
-
-        user = User.query.filter_by(username=username).first()
+        user = None
+        if username:
+            user = User.query.filter_by(username=username).first()
         if user:
             flash("This username already exists. Try again.", category="error")
         elif password is not None:
@@ -132,25 +121,18 @@ def home():
     # we then need to register these blueprints in __init__.py
     # current_user allows us to reference the user that is logged in
 
+
 @app.route('/success', methods=['GET', 'POST'])
 # @login_required
 def success():
-    # if 'user_id' in session:
-    #     print('session active home create g.user')
-    #     user = User.query.filter_by(id=session['user_id']).first()
-    #     g.user = user
-    # if 'user_id' not in session:
-    #     print('has user id in home')
-    #     redirect(url_for('login'))
-    # print('no user id in home')
     cookie = request.cookies.get('user_id')
     if not cookie or cookie == '':
         return redirect(url_for('login'))
     resp = make_response(render_template('success.html'))
-    resp.set_cookie('user_id', value=cookie, max_age=1500, samesite='Lax')
+    resp.set_cookie('user_id', value=cookie)
     return resp
-    # we then need to register these blueprints in __init__.py
-    # current_user allows us to reference the user that is logged in
+
+
 
 @app.route('/update-content', methods=['GET', 'POST'])
 # @login_required
@@ -178,7 +160,9 @@ def manage():
     #     g.user = user
 
     cookie = request.cookies.get('user_id')
-    user = User.query.filter_by(id=int(cookie)).first()
+    user = User.query.filter_by(id=cookie).first()
+    if not user:
+        return redirect(url_for('login'))
     if not user.is_authenticated:
         return redirect(url_for('login'))
 
