@@ -1,7 +1,7 @@
 from .databases import db
 from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from app import app
+from app import *
 from sqlalchemy.sql import func
 
 

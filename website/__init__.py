@@ -5,10 +5,7 @@ from flask import Flask
 from flask_mail import Mail
 # from flask_sqlalchemy import SQLAlchemy
 from os import path
-import sys
-#  from app import logout
 from .databases import db
-from flask_login import LoginManager
 
 DB_NAME = "database.db"
 
@@ -31,8 +28,6 @@ def create_app():
         # PERMANENT_SESSION_LIFETIME=timedelta(days=7),
     )
     db.init_app(app)
-
-    from website.models import User
     create_database(app)
 
     # ensure user not logged in is directed to login page onload
@@ -45,7 +40,6 @@ def create_app():
     # def load_user(id):
     #     return User.query.get(id)
     #     # return User.query.filter_by(alternative_id=id).first()
-    print('finished init')
     return app
 
 

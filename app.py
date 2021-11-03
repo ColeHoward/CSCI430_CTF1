@@ -1,6 +1,6 @@
 from website import create_app
 import random
-from website.models import User
+from website.models import *
 from werkzeug.security import generate_password_hash, check_password_hash
 from website.databases import db
 from flask import render_template, request, flash, jsonify, redirect, url_for, g, request, make_response
@@ -170,17 +170,21 @@ def manage():
     #     resp = make_response(render_template('manage.html', user=user))
     #     resp.set_cookie('user_id', value=str(user.id), max_age=1500, samesite='Lax')
 
-    if request.method == "GET" and cookie:
+    if request.method == "GET":
         action = request.args.get('action')
         amount = request.args.get('amount')
         # handle balance and close
+        resp = None
         if action and not amount:
             if action == 'balance':
                 user.action_type = 'balance'
                 print("balance=" + str(user.balance))
+                resp = make_response(render_template('manage.html', user=user))
+                resp.set_cookie('user_id', value=str(user.id))
             elif action == 'close':
                 user.action_type = 'close'
-                return close_account()
+                resp = make_response(close_account())
+                resp.set_cookie('user_id', value=str(user.id))
                 # resp = make_response(close_account())
                 # resp.set_cookie('user_id', value=str(user.id), max_age=1500)
                 # return resp
@@ -200,6 +204,8 @@ def manage():
                 current_balance = user.balance
                 if int(amount) > current_balance:
                     flash('Your account does not have sufficient funds to complete this withdrawal', category='error')
+                    resp = make_response(render_template('manage.html', user=user))
+                    resp.set_cookie('user_id', value=str(user.id))
                 else:
                     new_balance = current_balance - int(amount)
                     user.balance = new_balance
@@ -207,10 +213,13 @@ def manage():
                     user.action_type = 'balance'
                     db.session.commit()
                     resp = make_response(render_template('manage.html', user=user))
-                    resp.set_cookie('user_id', value=str(user.id), max_age=1500, samesite='Lax')
+                    resp.set_cookie('user_id', value=str(user.id))
             else:
                 flash('Please enter a value greater than zero', category='error')
-
+                resp = make_response(render_template('manage.html'))
+        else:
+            resp = make_response(render_template('manage.html', user=user))
+            resp.set_cookie('user_id', value=str(user.id))
     # return render_template('manage.html', user=g.user)
     return resp
 
@@ -233,6 +242,6 @@ def close_account():
 
 # only if we execute this file, and did not import it, should the app be run
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='localhost', port=8000, debug=True)
 
     #  ssl_context='adhoc'
